@@ -30,13 +30,13 @@ First off, there are a few ways to clone and initialize the repo (with its submo
 You can do either of the following:
 
 ```sh
-git clone --recursive https://github.com/electro-smith/DaisyExamples
+git clone --recursive https://github.com/jasonbirchler/DaisyExamples.git
 ```
 
 or
 
 ```sh
-git clone https://github.com/electro-smith/DaisyExamples
+git clone https://github.com/jasonbirchler/DaisyExamples.git
 git submodule update --init
 ```
 
