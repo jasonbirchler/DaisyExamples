@@ -1,22 +1,19 @@
-#include "daisy_patch.h"
+#include "daisy_patch_sm.h"
 #include "daisysp.h"
-#include "granular_processor.h"
+#include "dsp/granular_processor.h"
 
 #define NUM_PARAMS 9
 #define NUM_PAGES 2
 using namespace daisysp;
 using namespace daisy;
+using namespace patch_sm;
 
 GranularProcessorClouds processor;
-DaisyPatch              hw;
+DaisyPatchSM            hw;
 
 // Pre-allocate big blocks in main memory and CCM. No malloc here.
 uint8_t block_mem[118784];
 uint8_t block_ccm[65536 - 128];
-
-char paramNames[NUM_PARAMS][17];
-char pbModeNames[4][17];
-char qualityNames[4][17];
 
 int mymod(int a, int b)
 {
@@ -41,11 +38,6 @@ class ParamControl
     {
         param_num_ += inc;
         param_num_ = mymod(param_num_, NUM_PARAMS);
-    }
-
-    char* getName(int inc = 0)
-    {
-        return paramNames[mymod(param_num_ + inc, NUM_PARAMS)];
     }
 
     bool knobTouched(float newval)
@@ -88,11 +80,8 @@ class ParamControl
 };
 
 ParamControl paramControls[4];
+Switch toggle, button;
 
-int  cursorpos;
-int  menupage;
-bool selected;
-bool held;
 bool freeze_btn;
 int  pbMode;
 int  quality;
@@ -108,13 +97,16 @@ void AudioCallback(AudioHandle::InputBuffer  in,
 {
     Controls();
 
+    button.Debounce();
+    toggle.Debounce();
+
     FloatFrame input[size];
     FloatFrame output[size];
 
     for(size_t i = 0; i < size; i++)
     {
-        input[i].l  = in[0][i] * .5f + in[2][i] * .5f;
-        input[i].r  = in[1][i] * .5f + in[3][i] * .5f;
+        input[i].l  = in[0][i];
+        input[i].r  = in[1][i];
         output[i].l = output[i].r = 0.f;
     }
 
@@ -122,33 +114,9 @@ void AudioCallback(AudioHandle::InputBuffer  in,
 
     for(size_t i = 0; i < size; i++)
     {
-        out[0][i] = out[2][i] = output[i].l;
-        out[1][i] = out[3][i] = output[i].r;
+        out[0][i] = output[i].l;
+        out[1][i] = output[i].r;
     }
-}
-
-//set up the param names for the oled code
-void InitStrings()
-{
-    sprintf(paramNames[0], "position");
-    sprintf(paramNames[1], "size");
-    sprintf(paramNames[2], "pitch");
-    sprintf(paramNames[3], "density");
-    sprintf(paramNames[4], "texture");
-    sprintf(paramNames[5], "dry wet");
-    sprintf(paramNames[6], "stereo spread");
-    sprintf(paramNames[7], "feedback");
-    sprintf(paramNames[8], "reverb");
-
-    sprintf(pbModeNames[0], "Granular");
-    sprintf(pbModeNames[1], "Stretch");
-    sprintf(pbModeNames[2], "Looping Delay");
-    sprintf(pbModeNames[3], "Spectral");
-
-    sprintf(qualityNames[0], "16 bit stereo");
-    sprintf(qualityNames[1], "16 bit mono");
-    sprintf(qualityNames[2], "8 bit ulaw streo");
-    sprintf(qualityNames[3], "8 bit ulaw mono");
 }
 
 int main(void)
@@ -168,8 +136,6 @@ int main(void)
 
     parameters = processor.mutable_parameters();
 
-    InitStrings();
-
     for(int i = 0; i < 4; i++)
     {
         paramControls[i].Init(&hw.controls[i], parameters);
@@ -179,11 +145,8 @@ int main(void)
     paramControls[2].incParamNum(3);
     paramControls[3].incParamNum(5);
 
-    cursorpos  = 0;
-    selected   = false;
-    held       = false;
-    freeze_btn = false;
-    menupage   = 0;
+    button.Init(DaisyPatchSM::B7, hw.AudioCallbackRate());
+    toggle.Init(DaisyPatchSM::B8, hw.AudioCallbackRate());
     increment  = 0;
 
     hw.StartAdc();
@@ -191,47 +154,6 @@ int main(void)
     while(1)
     {
         processor.Prepare();
-
-        hw.display.Fill(false);
-        hw.display.DrawLine(0, 10, 128, 10, true);
-
-        hw.display.SetCursor(0, cursorpos * 13 + 13);
-        hw.display.WriteString(selected ? "x" : "o", Font_7x10, true);
-
-        switch(menupage)
-        {
-            case 0:
-                hw.display.SetCursor(0, 0);
-                hw.display.WriteString("Controls", Font_7x10, true);
-
-                //param names
-                for(int i = 0; i < 4; i++)
-                {
-                    hw.display.SetCursor(10, i * 13 + 13);
-                    hw.display.WriteString(
-                        paramControls[i].getName((i == cursorpos) ? increment
-                                                                  : 0),
-                        Font_7x10,
-                        !(selected && (i == cursorpos)));
-                };
-                break;
-            case 1:
-                hw.display.SetCursor(0, 0);
-                hw.display.WriteString("Buttons", Font_7x10, true);
-
-                hw.display.SetCursor(10, 13);
-                hw.display.WriteString(
-                    "freeze", Font_7x10, !parameters->freeze);
-
-                hw.display.SetCursor(10, 1 * 13 + 13);
-                hw.display.WriteString(pbModeNames[pbMode], Font_7x10, true);
-
-                hw.display.SetCursor(10, 2 * 13 + 13);
-                hw.display.WriteString(qualityNames[quality], Font_7x10, true);
-                break;
-        }
-
-        hw.display.Update();
     }
 }
 
@@ -245,53 +167,14 @@ void Controls()
         paramControls[i].Process();
     }
 
-    //long press switch page
-    menupage += hw.encoder.TimeHeldMs() > 1000.f && !held;
-    menupage %= NUM_PAGES;
-    held = hw.encoder.TimeHeldMs() > 1000.f; //only change pages once
-    held &= hw.encoder.Pressed();            //reset on release
-    selected &= !held;                       //deselect on page change
-
-    selected ^= hw.encoder.RisingEdge();
-
-    //encoder turn
-    if(selected)
-    {
-        if(menupage == 0)
-        {
-            increment += hw.encoder.Increment();
-        }
-        else
-        {
-            switch(cursorpos)
-            {
-                case 0: freeze_btn ^= abs(hw.encoder.Increment()); break;
-                case 1:
-                    pbMode += hw.encoder.Increment();
-                    pbMode = mymod(pbMode, 4);
-                    processor.set_playback_mode((PlaybackMode)pbMode);
-                    break;
-                case 2:
-                    quality += hw.encoder.Increment();
-                    quality = mymod(quality, 4);
-                    processor.set_quality(quality);
-                    break;
-            }
-        }
-    }
-    else
-    {
-        if(increment != 0)
-        {
-            paramControls[cursorpos].incParamNum(increment);
-            increment = 0;
-        }
-        cursorpos += hw.encoder.Increment();
-        cursorpos = mymod(cursorpos, menupage ? 3 : 4);
-    }
+    freeze_btn = toggle.Pressed();
+    pbMode += button.Pressed() ? 1 : 0;
+    pbMode = mymod(pbMode, 4);
+    processor.set_playback_mode((PlaybackMode)pbMode);
+    processor.set_quality(quality);
 
     // gate ins
-    parameters->freeze  = hw.gate_input[0].State() || freeze_btn;
-    parameters->trigger = hw.gate_input[1].Trig();
-    parameters->gate    = hw.gate_input[1].State();
+    parameters->freeze  = hw.gate_in_1.State() || freeze_btn;
+    parameters->trigger = hw.gate_in_2.Trig();
+    parameters->gate    = hw.gate_in_2.State();
 }

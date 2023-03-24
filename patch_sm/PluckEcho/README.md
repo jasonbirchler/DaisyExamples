@@ -13,11 +13,12 @@ Really easy to create unique sonic spaces!
 ## Controls
 | Control | Description | Comment |
 | --- | --- | --- |
-| Ctrl 1 | String Pitch | |
-| Ctrl 2 | String decay time | |
+| Ctrl 1 | String decay time | |
+| Ctrl 2 | Reverb feedback | |
 | Ctrl 3 | Delay Time | |
 | Ctrl 4 | Delay Feedback | |
 | Gate In 1 | Trigger In | Plucks the string |
+| CV_5 | 1 Volt/Octave
 | Outs 1-2 | Stereo Outputs | Out 1:L, Out 2: R |
 
 

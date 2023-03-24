@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 # Scans list of directories provided for examples containing a binary file,
 # and compiles a dist/ folder containing a matching hierarchy of binary files

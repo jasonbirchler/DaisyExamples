@@ -29,7 +29,7 @@
       "includePath": [
         "${workspaceFolder}/**",
         "${workspaceFolder}/../../libDaisy/**",
-        "${workspaceFolder}/../../DaisySP/**"
+        "${workspaceFolder}/../../DaisySP/**",
       ],
       "name": "macOS"
     }

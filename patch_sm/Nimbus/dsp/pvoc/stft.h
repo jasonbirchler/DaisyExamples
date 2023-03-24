@@ -35,7 +35,7 @@
 #ifdef USE_ARM_FFT
 #include <arm_math.h>
 #else
-#include "shy_fft.h"
+#include "../../shy_fft.h"
 #endif // USE_ARM_FFT
 
 #include "frame_transformation.h"

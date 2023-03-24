@@ -30,7 +30,7 @@
 #define CLOUDS_DSP_FX_PITCH_SHIFTER_H_
 
 
-#include "frame.h"
+#include "../frame.h"
 #include "fx_engine.h"
 
 using namespace daisysp;

@@ -31,16 +31,17 @@
 
 #include "correlator.h"
 #include "frame.h"
-#include "diffuser.h"
-#include "pitch_shifter.h"
-#include "reverb.h"
+#include "fx/diffuser.h"
+#include "fx/diffuser.h"
+#include "fx/pitch_shifter.h"
+#include "fx/reverb.h"
 #include "granular_processor.h"
 #include "granular_sample_player.h"
 #include "looping_sample_player.h"
-#include "phase_vocoder.h"
+#include "pvoc/phase_vocoder.h"
 #include "sample_rate_converter.h"
 #include "wsola_sample_player.h"
-#include "parameter_interpolator.h"
+#include "../parameter_interpolator.h"
 
 using namespace daisysp;
 

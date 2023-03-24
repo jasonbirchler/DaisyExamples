@@ -2,7 +2,9 @@
 TARGET = PluckEcho
 
 # Sources
-CPP_SOURCES = PluckEcho.cpp
+CPP_SOURCES = PluckEcho.cpp \
+ev_theory/theory.cpp \
+ev_theory/rhythm.cpp
 
 # Library Locations
 LIBDAISY_DIR = ../../libDaisy

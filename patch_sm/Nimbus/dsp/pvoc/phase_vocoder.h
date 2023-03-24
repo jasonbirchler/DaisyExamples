@@ -29,7 +29,7 @@
 #ifndef CLOUDS_DSP_PVOC_PHASE_VOCODER_H_
 #define CLOUDS_DSP_PVOC_PHASE_VOCODER_H_
 
-#include "frame.h"
+#include "../frame.h"
 #include "stft.h"
 #include "frame_transformation.h"
 

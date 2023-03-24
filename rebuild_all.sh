@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/zsh
 
 ./ci/build_libs.sh
 ./ci/build_examples.py

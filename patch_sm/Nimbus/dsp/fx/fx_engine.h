@@ -30,7 +30,7 @@
 #define CLOUDS_DSP_FX_FX_ENGINE_H_
 
 #include <algorithm>
-#include "stmtemp.h"
+#include "../../stmtemp.h"
 
 using namespace daisysp;
 

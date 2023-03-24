@@ -54,7 +54,8 @@
                 "-mfpu=fpv5-d16",
                 "-mfloat-abi=hard",
                 "-mthumb"
-            ]
+            ],
+            "configurationProvider": "ms-vscode.makefile-tools"
         }
     ],
     "version": 4

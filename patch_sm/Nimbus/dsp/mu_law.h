@@ -31,7 +31,7 @@
 
 #include "daisy.h"
 #include <stdint.h>
-#include "resources.h"
+#include "../resources.h"
 
 using namespace daisy;
 
